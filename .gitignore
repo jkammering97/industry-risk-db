@@ -3,3 +3,7 @@
 __pycache__/
 *.pyc
 .venv/
+dbt_risk/target/
+dbt_risk/dbt_packages/
+/dbt_risk/
+*.yml

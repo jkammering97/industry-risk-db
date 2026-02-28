@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import os
 import json
+import time
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -42,8 +43,15 @@ def load_partner_areas(filepath: str) -> dict:
         return {}
 
 
-def fetch_trade_data(api_key: str, reporter_code: str = "40", period: str = "2024", 
-                     cmd_code: str = "7208", flow_code: str = "M,X") -> dict:
+def fetch_trade_data(
+    api_key: str,
+    reporter_code: str = "40",
+    period: str = "2024",
+    cmd_code: str = "7208",
+    flow_code: str = "M,X",
+    max_retries: int = 3,
+    retry_wait_seconds: int = 4,
+) -> dict:
     """
     Fetch trade data from UN Comtrade API.
     
@@ -72,19 +80,33 @@ def fetch_trade_data(api_key: str, reporter_code: str = "40", period: str = "202
     print(f"\n📡 Fetching trade data from Comtrade API...")
     print(f"   Reporter: {reporter_code}, Period: {period}, Commodity: {cmd_code}")
     
-    response = requests.get(url, params=params, headers=headers)
-    
-    if response.status_code != 200:
+    for attempt in range(max_retries + 1):
+        response = requests.get(url, params=params, headers=headers)
+
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                print(f"✓ API response received")
+                return data
+            except json.JSONDecodeError:
+                print("✗ Invalid JSON response from API")
+                return None
+
+        if response.status_code == 429 and attempt < max_retries:
+            retry_after = response.headers.get("Retry-After")
+            if retry_after and retry_after.isdigit():
+                wait_seconds = int(retry_after)
+            else:
+                wait_seconds = retry_wait_seconds * (attempt + 1)
+            print(f"⚠ API rate-limited (429). Retrying in {wait_seconds}s...")
+            time.sleep(wait_seconds)
+            continue
+
         print(f"✗ API Error {response.status_code}")
         return None
-    
-    try:
-        data = response.json()
-        print(f"✓ API response received")
-        return data
-    except json.JSONDecodeError:
-        print("✗ Invalid JSON response from API")
-        return None
+
+    print("✗ API retry limit reached")
+    return None
 
 
 def process_trade_dataframe(data: dict) -> pd.DataFrame:

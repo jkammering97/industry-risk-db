@@ -40,11 +40,30 @@ def filter_exports(exports_df: pd.DataFrame, exclude_partner: str = "World") -> 
     if exports_df is None:
         return pd.DataFrame()
 
-    # If `partnerText` exists, filter by it; otherwise return the original DataFrame copy.
-    if "partnerText" in exports_df.columns:
-        mask = exports_df["partnerText"].fillna("") != exclude_partner
-        return exports_df[mask].copy()
-    return exports_df.copy()
+    filtered = exports_df.copy()
+
+    if "partnerText" in filtered.columns:
+        text_mask = (
+            filtered["partnerText"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            != str(exclude_partner).strip().lower()
+        )
+        filtered = filtered[text_mask]
+
+    if "partnerCode" in filtered.columns:
+        code_mask = (
+            filtered["partnerCode"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .isin({"0", "00", "000"})
+        )
+        filtered = filtered[~code_mask]
+
+    return filtered.copy()
 
 
 def compute_hhi(df: pd.DataFrame, value_col: str = "tradeValueUSD", weight_col: str = "netWeightKg") -> Tuple[float, float, pd.DataFrame]:
