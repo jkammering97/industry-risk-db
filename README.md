@@ -32,35 +32,81 @@ That weighting is implemented in the dbt model for `mart.supplier_risk`.
 ## End-To-End Dataflow
 
 ```mermaid
-flowchart TD
-    A["UN Comtrade API"] --> B["fetch_data_products.py<br/>Fetch and normalize trade rows"]
-    B --> C["risk_sql_pipeline.py<br/>Enrich partner names and filter out 'World' rows"]
-    C --> D["raw.comtrade_trade"]
-    C --> E["Derived heuristic signals<br/>logistics + policy"]
-    E --> F["raw.logistics_signals"]
-    E --> G["raw.policy_signals"]
+flowchart LR
+    subgraph source["1. External Source"]
+        A["UN Comtrade API"]
+    end
 
-    D --> H["dbt staging models<br/>stg_comtrade_trade"]
-    F --> I["dbt staging models<br/>stg_logistics_signals"]
-    G --> J["dbt staging models<br/>stg_policy_signals"]
+    subgraph ingest["2. Ingestion Layer"]
+        B["fetch_data_products.py<br/>Fetch + normalize trade rows"]
+        C["risk_sql_pipeline.py<br/>Enrich, filter, derive risk signals"]
+    end
 
-    H --> K["mart.hhi_layer"]
-    I --> L["mart.logistics_layer"]
-    J --> M["mart.policy_layer"]
+    subgraph raw["3. Raw SQL Layer"]
+        D["raw.comtrade_trade"]
+        E["raw.logistics_signals"]
+        F["raw.policy_signals"]
+    end
 
-    K --> N["mart.supplier_risk"]
-    L --> N
+    subgraph staging["4. dbt Staging Layer"]
+        G["stg_comtrade_trade"]
+        H["stg_logistics_signals"]
+        I["stg_policy_signals"]
+    end
+
+    subgraph marts["5. dbt Mart Layer"]
+        J["mart.hhi_layer"]
+        K["mart.logistics_layer"]
+        L["mart.policy_layer"]
+        M["mart.supplier_risk"]
+    end
+
+    subgraph serve["6. Serving Layer"]
+        N["risk_dashboard_sql.py<br/>SQL-backed Streamlit dashboard"]
+    end
+
+    A --> B --> C
+    C --> D
+    C --> E
+    C --> F
+
+    D --> G
+    E --> H
+    F --> I
+
+    G --> J
+    H --> K
+    I --> L
+
+    J --> M
+    K --> M
+    L --> M
+
     M --> N
+    J -.detail view.-> N
+    K -.detail view.-> N
+    L -.detail view.-> N
 
-    N --> O["risk_dashboard_sql.py<br/>SQL-backed Streamlit dashboard"]
-    K --> O
-    L --> O
-    M --> O
+    classDef sourceNode fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1,stroke-width:2px;
+    classDef ingestNode fill:#E8F5E9,stroke:#43A047,color:#1B5E20,stroke-width:2px;
+    classDef rawNode fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px;
+    classDef stagingNode fill:#F3E5F5,stroke:#8E24AA,color:#4A148C,stroke-width:2px;
+    classDef martNode fill:#FCE4EC,stroke:#D81B60,color:#880E4F,stroke-width:2px;
+    classDef serveNode fill:#E0F7FA,stroke:#00ACC1,color:#006064,stroke-width:2px;
 
-    P["risk_layers_store.py<br/>Azure Table Storage adapter"] --> Q["Azure Tables: hhirisk / logisticsrisk / policyrisk"]
-    Q --> R["risk_dashboard_layers.py<br/>Prototype Streamlit dashboard"]
-    P --> R
-    S["Local sample data fallback"] --> P
+    class A sourceNode;
+    class B,C ingestNode;
+    class D,E,F rawNode;
+    class G,H,I stagingNode;
+    class J,K,L,M martNode;
+    class N serveNode;
+
+    style source fill:#F8FBFF,stroke:#90CAF9,stroke-width:2px;
+    style ingest fill:#F6FFF7,stroke:#A5D6A7,stroke-width:2px;
+    style raw fill:#FFF8F1,stroke:#FFCC80,stroke-width:2px;
+    style staging fill:#FBF5FF,stroke:#CE93D8,stroke-width:2px;
+    style marts fill:#FFF5F8,stroke:#F48FB1,stroke-width:2px;
+    style serve fill:#F2FCFD,stroke:#80DEEA,stroke-width:2px;
 ```
 
 ## Repository Structure
