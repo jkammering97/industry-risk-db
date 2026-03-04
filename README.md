@@ -1,13 +1,13 @@
 # Industry Risk DB
 
-- This repository holds a *supply-chain risk analytics platform* focused on import and its implied trade exposure. 
+- This repository holds a **supply-chain risk analytics platform** focused on import and its implied trade exposure. 
 - It combines UN Comtrade trade data with derived risk signals so procurement, operations, and analytics teams can see which supplier countries create the most concentration, logistics, and policy risk.
-- Value proposition: Through improved understanding of interdependencies in the sourcing environment, decisions can be priced for risk at a current rate, ensuring *plannability* and *financial stability*.
+- **Value proposition**: Through improved understanding of interdependencies in the sourcing environment, decisions can be priced for risk at a current rate, ensuring **plannability** and **financial stability**.
 
 The repository contains two working streams:
 
-- A lightweight prototype path using Azure Table Storage (or local sample data) for quick UI demos.
-- A more robust Azure SQL + dbt path that ingests raw trade data, models it into staging and mart layers, and powers the SQL-backed dashboard.
+1. A lightweight prototype path using Azure Table Storage (or local sample data) for quick UI demos.
+2. A more robust Azure SQL + dbt path that ingests raw trade data, models it into staging and mart layers, and powers the SQL-backed dashboard.
 
 ## End-To-End Dataflow
 
