@@ -146,10 +146,22 @@ def build_trade_sunburst(hhi_df: pd.DataFrame):
     )
     return fig, ""
 
+st.title("Import Risk Observer")
 
-st.set_page_config(page_title="SME Import Risk Observer (SQL)", layout="wide")
-st.title("SME Import Risk Observer (SQL)")
-st.caption("Azure SQL + dbt marts: HHI, logistics, policy")
+st.set_page_config(page_title="Import Risk Observer", layout="wide")
+
+caption, info, copyright = st.columns(3)
+
+with caption:
+    st.caption("Azure SQL Server -> dbt marts: HHI, logistics, policy")
+
+with info:
+    st.button("info", help="This dashboard reads pre-aggregated data from Azure SQL Server and serves these to...", type="primary")
+
+with copyright:
+    st.button("copyright", help="This data is subject to copyright protection of United Nations COMTRADE, please refer to the license agreement for more information (https://comtrade.un.org/licenseagreement.html).\n\nfair usage:https://uncomtrade.org/docs/policy-on-use-and-re-dissemination/#fairusage", 
+              type="secondary")
+
 
 script_dir = Path(__file__).parent
 partner_areas_file = script_dir / "partnerAreas.json"
