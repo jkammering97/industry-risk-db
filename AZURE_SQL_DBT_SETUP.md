@@ -1,8 +1,6 @@
 # Azure SQL + dbt Setup (for Risk Layers)
 
-## Why this setup
-
-You already created a Storage Account. For a SQL-served dashboard and BI-style querying, use:
+## setup
 
 - **Storage Account** for optional raw files / backups (bronze)
 - **Azure SQL Database** for structured raw/staging/mart tables

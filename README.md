@@ -105,9 +105,9 @@ That weighting is implemented in the dbt model for `mart.supplier_risk`.
 
 ## Who This Is For
 
-- Business stakeholders: use the dashboards to identify sourcing concentration, supplier-country exposure, and candidate diversification priorities.
-- Data and analytics teams: extend the ingestion logic, refine scoring, and build downstream models from the SQL marts.
-- Engineers: deploy the Azure resources, run the ingestion pipeline, and maintain the Streamlit apps and dbt project.
+- Business: use the dashboards to identify sourcing concentration, supplier-country exposure, and candidate diversification priorities.
+- Data/Analytics: extend the ingestion logic, refine scoring, and build downstream models from the SQL marts.
+- Engineering: deploy the Azure resources, run the ingestion pipeline, and maintain the Streamlit apps and dbt project.
 
 
 ## Repository Structure
@@ -120,13 +120,12 @@ That weighting is implemented in the dbt model for `mart.supplier_risk`.
 - `dbt_risk/`: dbt project that transforms raw SQL data into staging views and mart tables.
 - `risk_dashboard_sql.py`: Streamlit dashboard that reads from the `mart` schema in Azure SQL.
 - `risk_layers_store.py`: storage abstraction for the prototype layer-based dashboard; supports Azure Table Storage or local sample rows.
-- `risk_dashboard_layers.py`: Streamlit dashboard for the Table Storage / sample-data path.
 - `seed_risk_layers.py`: seeds sample layer data into Azure Table Storage.
 - `infra/main.bicep`: provisions Azure Storage and the three Azure Tables.
 - `infra/sql.bicep`: provisions Azure SQL Server and database.
 - `scripts/`: deployment and pipeline orchestration scripts.
 
-## Business Logic In Plain English
+## Business Logic
 
 ### 1. Trade concentration
 

@@ -7,3 +7,8 @@ dbt_risk/target/
 dbt_risk/dbt_packages/
 /dbt_risk/
 *.yml
+./legacy
+/anvil_app/
+/assets/
+/anvil_snapshot/
+/tests/

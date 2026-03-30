@@ -155,7 +155,11 @@ script_dir = Path(__file__).parent
 partner_areas_file = script_dir / "partnerAreas.json"
 partner_map = load_partner_areas(str(partner_areas_file))
 
-country_names = sorted(partner_map.values()) if partner_map else ["Austria"]
+fetched_countries = [620,780,788,826,792,804,40,705,616,276]
+country_names = dict((k, partner_map[k]) for k in fetched_countries if k in partner_map)
+
+country_names = sorted(country_names.values()) if country_names else ["Austria"]
+
 selected_country_name = st.sidebar.selectbox(
     "Country at risk",
     country_names,
