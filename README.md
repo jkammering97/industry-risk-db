@@ -89,6 +89,8 @@ flowchart LR
     style serve fill:#F2FCFD,stroke:#80DEEA,stroke-width:2px;
 ```
 
+For a presentation-style infrastructure view with Azure service icons and layer grouping, see `AZURE_ARCHITECTURE_MERMAID.md`.
+
 ## What The System Produces
 
 The project organizes risk into three layers:
@@ -121,6 +123,8 @@ That weighting is implemented in the dbt model for `mart.supplier_risk`.
 - `risk_dashboard_sql.py`: Streamlit dashboard that reads from the `mart` schema in Azure SQL.
 - `risk_layers_store.py`: storage abstraction for the prototype layer-based dashboard; supports Azure Table Storage or local sample rows.
 - `seed_risk_layers.py`: seeds sample layer data into Azure Table Storage.
+- `load_risk_layers_to_tables.py`: fetches richer trade data and writes detailed HHI/logistics/policy rows into Azure Table Storage for the table-backed dashboard.
+- `migrate_sql_marts_to_tables.py`: one-off migration utility that copies rich mart rows from Azure SQL into Azure Table Storage before you retire SQL.
 - `infra/main.bicep`: provisions Azure Storage and the three Azure Tables.
 - `infra/sql.bicep`: provisions Azure SQL Server and database.
 - `scripts/`: deployment and pipeline orchestration scripts.
@@ -180,13 +184,13 @@ The staging models cast types, standardize column names, and remove "World" aggr
 
 ### `risk_dashboard_sql.py`
 
-This is the production-oriented dashboard:
+This is the richer dashboard layout:
 
-- Connects to Azure SQL via SQLAlchemy and `pyodbc`
-- Reads from `mart.supplier_risk`, `mart.hhi_layer`, `mart.logistics_layer`, and `mart.policy_layer`
 - Shows KPI metrics, a top-supplier risk bar chart, a trade-share sunburst, and raw data tabs
+- Can be driven by pre-aggregated Azure Table Storage layer rows for a lower-cost deployment
+- No longer requires Azure SQL for the hosted demo path
 
-Use this dashboard when the SQL pipeline and dbt models have been run.
+Use this dashboard when you want the richer UI without paying for the SQL stack.
 
 ### `risk_dashboard_layers.py`
 
@@ -197,6 +201,8 @@ This is the prototype/demo dashboard:
 - Lets you seed sample rows for demo purposes
 
 Use this dashboard when you want a quick demo without the SQL stack.
+
+For the lowest-cost Azure deployment, use the table-backed `risk_dashboard_sql.py` container path described in `AZURE_CONTAINER_APP_DEMO_SETUP.md`.
 
 ### `risk_observer.py`
 
