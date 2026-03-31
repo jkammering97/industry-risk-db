@@ -13,83 +13,81 @@ The repository contains two working streams:
 
 ```mermaid
 flowchart LR
-    subgraph source["1. External Source"]
-        A["UN Comtrade API"]
+    subgraph website["Website Experience"]
+        user["Supply Chain Manager\nor Procurement Lead"]
+        linkedin["LinkedIn / shared links"]
+        browser["Browser session\nlanding page + observer"]
     end
 
-    subgraph ingest["2. Ingestion Layer"]
-        B["fetch_data_products.py<br/>Fetch + normalize trade rows"]
-        C["risk_sql_pipeline.py<br/>Enrich, filter, derive risk signals"]
+    subgraph networking["Networking and Access"]
+        publicUrl["Azure Container Apps URL\ncountry-risk-container...azurecontainerapps.io"]
+        customDomain["Optional custom domain\nrisk.yourdomain.com"]
+        dns@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/dns-zone.svg", label: "DNS Zone", pos: "b", w: 64, h: 64, constraint: "on" }
+        publicIp@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/public-endpoint.svg", label: "Public endpoint", pos: "b", w: 64, h: 64, constraint: "on" }
     end
 
-    subgraph raw["3. Raw SQL Layer"]
-        D["raw.comtrade_trade"]
-        E["raw.logistics_signals"]
-        F["raw.policy_signals"]
+    subgraph cloud["Azure Cloud Runtime"]
+        ca@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/container-app.svg", label: "Container App\ncountry-risk-container", pos: "b", w: 72, h: 72, constraint: "on" }
+        env@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/container-apps-environment.svg", label: "Container Apps Environment\nmanagedEnvironment-RiskObserverRG", pos: "b", w: 72, h: 72, constraint: "on" }
+        store@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/storage-account.svg", label: "Storage Account + Tables\ncountrytoriskstorage", pos: "b", w: 72, h: 72, constraint: "on" }
+        logs@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/log-analytics.svg", label: "Log Analytics Workspace", pos: "b", w: 72, h: 72, constraint: "on" }
+        kv@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/key-vault.svg", label: "Key Vault\nlegacy / optional", pos: "b", w: 72, h: 72, constraint: "on" }
+        mi@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/managed-identity.svg", label: "Managed Identity\noptional", pos: "b", w: 72, h: 72, constraint: "on" }
+        sql@{ img: "https://raw.githubusercontent.com/jkammering97/industy_risk_db/main/docs/architecture/icons/sql-database.svg", label: "Azure SQL Database\nlegacy rich mart source", pos: "b", w: 72, h: 72, constraint: "on" }
+        observer["Streamlit app\nrisk_dashboard_sql.py"]
+        landing["Landing page\nproduct story + value framing"]
+        charts["Observer UI\nKPIs, bar chart, sunburst, tabs"]
+        layers["Table-backed layer data\nHHI, logistics, policy"]
     end
 
-    subgraph staging["4. dbt Staging Layer"]
-        G["stg_comtrade_trade"]
-        H["stg_logistics_signals"]
-        I["stg_policy_signals"]
+    subgraph local["Local Workspace and Data Jobs"]
+        repo["Local repo\nindustry_risk_db"]
+        docker["Docker buildx image\nkammer97/country-risk-container:*"]
+        migration["migrate_sql_marts_to_tables.py\nSQL -> Azure Tables"]
+        loader["load_risk_layers_to_tables.py\nComtrade -> Azure Tables"]
+        comtrade["UN Comtrade API"]
     end
 
-    subgraph marts["5. dbt Mart Layer"]
-        J["mart.hhi_layer"]
-        K["mart.logistics_layer"]
-        L["mart.policy_layer"]
-        M["mart.supplier_risk"]
-    end
+    user --> browser
+    linkedin -. shared link .-> browser
+    browser --> customDomain
+    browser --> publicUrl
 
-    subgraph serve["6. Serving Layer"]
-        N["risk_dashboard_sql.py<br/>SQL-backed Streamlit dashboard"]
-    end
+    customDomain -. optional DNS mapping .-> dns
+    dns --> publicIp
+    publicUrl --> publicIp
+    publicIp --> ca
 
-    A --> B --> C
-    C --> D
-    C --> E
-    C --> F
+    ca --> observer
+    observer --> landing
+    observer --> charts
+    charts --> layers
+    layers --> store
 
-    D --> G
-    E --> H
-    F --> I
+    ca --> env
+    env --> logs
+    ca -. optional secret access .-> kv
+    ca -. optional workload identity .-> mi
 
-    G --> J
-    H --> K
-    I --> L
+    repo --> docker
+    docker -. publish image .-> ca
+    sql --> migration
+    migration --> store
+    comtrade --> loader
+    loader --> store
 
-    J --> M
-    K --> M
-    L --> M
+    classDef websiteNode fill:#f6efe3,stroke:#8c6b3f,color:#2f2214,stroke-width:1.4px;
+    classDef networkNode fill:#eaf2fb,stroke:#4b76b5,color:#18304e,stroke-width:1.4px;
+    classDef cloudNode fill:#eef7f4,stroke:#2f6b5d,color:#12303b,stroke-width:1.4px;
+    classDef localNode fill:#f5effa,stroke:#7c5ea7,color:#36224f,stroke-width:1.4px;
 
-    M --> N
-    J -.detail view.-> N
-    K -.detail view.-> N
-    L -.detail view.-> N
-
-    classDef sourceNode fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1,stroke-width:2px;
-    classDef ingestNode fill:#E8F5E9,stroke:#43A047,color:#1B5E20,stroke-width:2px;
-    classDef rawNode fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px;
-    classDef stagingNode fill:#F3E5F5,stroke:#8E24AA,color:#4A148C,stroke-width:2px;
-    classDef martNode fill:#FCE4EC,stroke:#D81B60,color:#880E4F,stroke-width:2px;
-    classDef serveNode fill:#E0F7FA,stroke:#00ACC1,color:#006064,stroke-width:2px;
-
-    class A sourceNode;
-    class B,C ingestNode;
-    class D,E,F rawNode;
-    class G,H,I stagingNode;
-    class J,K,L,M martNode;
-    class N serveNode;
-
-    style source fill:#F8FBFF,stroke:#90CAF9,stroke-width:2px;
-    style ingest fill:#F6FFF7,stroke:#A5D6A7,stroke-width:2px;
-    style raw fill:#FFF8F1,stroke:#FFCC80,stroke-width:2px;
-    style staging fill:#FBF5FF,stroke:#CE93D8,stroke-width:2px;
-    style marts fill:#FFF5F8,stroke:#F48FB1,stroke-width:2px;
-    style serve fill:#F2FCFD,stroke:#80DEEA,stroke-width:2px;
+    class user,linkedin,browser websiteNode;
+    class publicUrl,customDomain networkNode;
+    class observer,landing,charts,layers cloudNode;
+    class repo,docker,migration,loader,comtrade localNode;
 ```
 
-For a presentation-style infrastructure view with Azure service icons and layer grouping, see `AZURE_ARCHITECTURE_MERMAID.md`.
+The icon assets used by this Mermaid view are committed in `docs/architecture/icons/`.
 
 ## What The System Produces
 
